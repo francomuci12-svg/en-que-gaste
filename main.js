@@ -76,6 +76,11 @@ function mostrarGastos() {
   const totalEl = document.getElementById("total");
 
   lista.innerHTML = "";
+  if (gastos.length === 0) {
+  lista.innerHTML = `
+    <p class="sin-gastos">Aún no tenés gastos</p>
+  `;
+}
 
   let total = 0;
   let categorias = {};
@@ -122,31 +127,46 @@ function mostrarGastos() {
       });
     });
 
+if (gastos.length > 0) {
   lista.innerHTML += `
-    <button onclick="toggleMostrar()">
-      ${mostrarTodo ? "Mostrar menos" : "Mostrar más"}
+    <button class="btn-mostrar" onclick="toggleMostrar()">
+      ${mostrarTodo ? "Mostrar menos ↑" : "Mostrar más ↓"}
     </button>
   `;
+}
 
   totalEl.textContent = formatearMonto(total);
 
-  const ctx = document.getElementById("grafico");
+const ctx = document.getElementById("grafico");
 
-  if (ctx) {
-    if (grafico) grafico.destroy();
+const labels = Object.keys(categorias);
+const data = Object.values(categorias);
 
-    grafico = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: Object.keys(categorias),
-        datasets: [{
-          data: Object.values(categorias),
-          backgroundColor: Object.keys(categorias).map(c => coloresCategoria[c])
-        }]
-      }
-    });
+if (!ctx) return;
+
+// 👇 SI NO HAY DATOS
+if (labels.length === 0) {
+  if (grafico) {
+    grafico.destroy();
+    grafico = null;
+  }
+} else {
+  // 👇 SI HAY DATOS
+  if (grafico) {
+    grafico.destroy();
   }
 
+  grafico = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: labels.map(c => coloresCategoria[c] || "#ccc")
+      }]
+    }
+  });
+}
   generarCalendario();
 }
 
@@ -289,3 +309,22 @@ if (rect) {
 function cerrarModal() {
   document.getElementById("overlay").classList.remove("active");
 }
+const btnModo = document.getElementById("toggleModo");
+
+// cargar preferencia guardada
+if (localStorage.getItem("modo") === "dark") {
+  document.body.classList.add("dark");
+  btnModo.textContent = "☀️";
+}
+
+btnModo.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+
+  if (document.body.classList.contains("dark")) {
+    localStorage.setItem("modo", "dark");
+    btnModo.textContent = "☀️";
+  } else {
+    localStorage.setItem("modo", "light");
+    btnModo.textContent = "🌙";
+  }
+});

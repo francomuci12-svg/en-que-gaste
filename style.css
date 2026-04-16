@@ -611,4 +611,60 @@ h3 {
 }.dia.activo {
   border-color: #000000;
   box-shadow: 0 8px 20px rgba(229, 57, 53, 0.15);
+}.sin-gastos {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  margin-top: 20px;
+}.sin-grafico {
+  text-align: center;
+  color: #888;
+  margin-top: 20px;
+}
+/* MODO OSCURO */
+.dark {
+  background: #0f0f0f;
+  color: #f5f5f5;
+}
+
+.dark .panel {
+  background: #1c1c1c;
+  border: none;
+}
+
+.dark input,
+.dark select {
+  background: #1c1c1c;
+  color: white;
+  border: 1px solid #333;
+}
+
+.dark .gasto {
+  background: #1c1c1c;
+}
+
+.dark .dia {
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+}
+
+.dark .cal-header h3 {
+  background: #2a2a2a;
+  color: white;
+}
+/* textos dentro del calendario */
+.dark .numero-dia {
+  color: #fff;
+}
+
+.dark .gasto-dia .desc {
+  color: #ddd;
+}
+
+.dark .gasto-dia .monto {
+  color: #fff;
+}
+
+.dark .extra {
+  color: #aaa;
 }

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>¿En qué gasté?</title>
+
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- HEADER PRO -->
+    <div class="header">
+      <h1 class="titulo">¿En qué gasté?</h1>
+      <p class="subtitle">Control simple de gastos diarios</p>
+    </div>
+
+    <!-- FORM -->
+    <div class="form">
+      <input id="descripcion" placeholder="Ej: supermercado">
+      <input id="monto" type="number" placeholder="Monto en $">
+      <input id="fecha" type="date">
+
+      <select id="categoria">
+        <option>Comida</option>
+        <option>Transporte</option>
+        <option>Supermercado</option>
+        <option>Entretenimiento</option>
+        <option>Alquiler</option>
+        <option>Servicios</option>
+        <option>Tarjeta</option>
+        <option>Deudas</option>
+        <option>Ahorro</option>
+        <option>Ropa</option>
+        <option>Gimnasio</option>
+        <option>Salud</option>
+        <option>Salidas</option>
+        <option>Mascotas</option>
+      </select>
+
+      <button onclick="agregarGasto()">Agregar gasto</button>
+    </div>
+
+    <!-- TARJETA TOTAL -->
+    <div class="total-card">
+      <p>Total del mes</p>
+      <h2>$<span id="total">0</span></h2>
+    </div>
+
+    <!-- GRÁFICO -->
+  <div class="dashboard">
+  <div class="panel grafico-panel">
+    <canvas id="grafico"></canvas>
+  </div>
+
+  <div id="lista-container">
+    <div id="lista"></div>
+  </div>
+</div>
+
+<!-- 👇 CALENDARIO AFUERA -->
+<div class="panel calendario-panel">
+  <div class="cal-header">
+  <button onclick="cambiarMes(-1)">←</button>
+  <h3 id="mesActual"></h3>
+  <button onclick="cambiarMes(1)">→</button>
+</div>
+  </div>
+
+  <div class="dias-semana">
+    <span>Lun</span>
+    <span>Mar</span>
+    <span>Mié</span>
+    <span>Jue</span>
+    <span>Vie</span>
+    <span>Sáb</span>
+    <span>Dom</span>
+  </div>
+
+  <div id="calendario"></div>
+</div>
+    <div id="detalle-dia" class="detalle-dia"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="main.js"></script>
+  
+<div id="overlay" class="overlay">
+  <div id="modal" class="modal"></div>
+</div>
+</body>
+</html>

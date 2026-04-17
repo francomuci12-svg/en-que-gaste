@@ -1,34 +1,57 @@
 function formatearMonto(num) {
-  return num.toLocaleString("es-AR");
+  return Number(num).toLocaleString("es-AR");
 }
 let diaSeleccionado = null;
 const coloresCategoria = {
-  "Comida": "#e53935",
-  "Transporte": "#1e88e5",
-  "Supermercado": "#43a047",
-  "Entretenimiento": "#fb8c00",
-  "Alquiler": "#757575",
-  "Servicios": "#00acc1",
-  "Tarjeta": "#8e24aa",
-  "Deudas": "#d32f2f",
-  "Ahorro": "#2e7d32",
-  "Ropa": "#d81b60",
-  "Gimnasio": "#00897b",
-  "Salud": "#1976d2",
-  "Salidas": "#f57c00",
-  "Mascotas": "#7cb342"
+  "Comida": "#ff4d4f",
+  "Transporte": "#40a9ff",
+  "Supermercado": "#73d13d",
+  "Entretenimiento": "#9254de",
+  "Alquiler": "#8c8c8c",
+  "Servicios": "#36cfc9",
+  "Tarjeta": "#597ef7",
+  "Ropa": "#ff85c0",
+  "Gimnasio": "#13c2c2",
+  "Salud": "#2f54eb",
+  "Salidas": "#fadb14",
 };
 
 let grafico;
 let mostrarTodo = false;
-let mesActual = new Date();
-
+let mesSeleccionado = new Date();
 let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
 
-gastos = gastos.map(g => ({
-  ...g,
-  fecha: g.fecha || new Date().toISOString().split("T")[0]
-}));
+function obtenerGastosDelMes() {
+  return gastos.filter(g => {
+    const [y, m, d] = g.fecha.split("-");
+    const f = new Date(y, m - 1, d);
+
+    return (
+      f.getMonth() === mesSeleccionado.getMonth() &&
+      f.getFullYear() === mesSeleccionado.getFullYear()
+    );
+  });
+}
+function obtenerTotalMes(fechaBase) {
+  return gastos.filter(g => {
+    const [y, m, d] = g.fecha.split("-");
+    const f = new Date(y, m - 1, d);
+
+    return (
+      f.getMonth() === fechaBase.getMonth() &&
+      f.getFullYear() === fechaBase.getFullYear()
+    );
+  }).reduce((acc, g) => acc + g.monto, 0);
+}
+gastos = gastos.map(g => {
+  if (g.fecha) return g;
+
+  const hoy = new Date();
+
+  const fechaLocal = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+
+  return { ...g, fecha: fechaLocal };
+});
 
 function guardar() {
   localStorage.setItem("gastos", JSON.stringify(gastos));
@@ -42,27 +65,54 @@ window.onload = () => {
 };
 
 function agregarGasto() {
-  let descripcion = document.getElementById("descripcion").value.trim();
+  const btn = document.querySelector(".form button");
 
-  descripcion = descripcion
-    .toLowerCase()
-    .split(/\s+/)
-    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
-
-  const monto = Number(document.getElementById("monto").value);
-  const categoria = document.getElementById("categoria").value;
+const descripcion = capitalizar(
+  document.getElementById("descripcion").value.trim()
+);
+ const monto = Number(
+  document.getElementById("monto").value.replace(/\D/g, "")
+);
   const fecha = document.getElementById("fecha").value;
+  const categoria = document.getElementById("categoria").value;
 
-  if (!descripcion || !monto) return;
+  // 👇 VALIDAR PRIMERO
+  if (!descripcion || !monto || !fecha) {
+ mostrarToast("⚠️ Completá todos los campos", "error");
+    return;
+  }
 
-  gastos.push({ descripcion, monto, categoria, fecha });
+  // 👇 RECIÉN ACÁ loading
+  btn.textContent = "Agregando...";
+  btn.disabled = true;
 
-  document.getElementById("descripcion").value = "";
-  document.getElementById("monto").value = "";
+  setTimeout(() => {
+    try {
+      gastos.push({
+        descripcion,
+        monto: Number(monto),
+        fecha,
+        categoria
+      });
 
-  guardar();
-  mostrarGastos();
+      guardar();
+      mostrarGastos();
+      generarCalendario();
+
+      mostrarToast("✔ Gasto agregado");
+
+      // limpiar inputs
+      document.getElementById("descripcion").value = "";
+      document.getElementById("monto").value = "";
+    } catch (error) {
+      console.error(error);
+    }
+
+    // 👇 SIEMPRE se ejecuta
+    btn.textContent = "Agregar gasto";
+    btn.disabled = false;
+
+  }, 300);
 }
 
 function eliminarGasto(index) {
@@ -75,111 +125,373 @@ function mostrarGastos() {
   const lista = document.getElementById("lista");
   const totalEl = document.getElementById("total");
 
-  lista.innerHTML = "";
-  if (gastos.length === 0) {
-  lista.innerHTML = `
-    <p class="sin-gastos">Aún no tenés gastos</p>
-  `;
+  const gastosMes = obtenerGastosDelMes(); // 👈 PRIMERO SIEMPRE
+
+  const estadoVacio = document.getElementById("estadoVacio");
+const dashboard = document.querySelector(".dashboard");
+
+if (gastosMes.length === 0) {
+  if (estadoVacio) estadoVacio.style.display = "block";
+  if (dashboard) dashboard.style.display = "none";
+} else {
+  if (estadoVacio) estadoVacio.style.display = "none";
+  if (dashboard) dashboard.style.display = "grid";
 }
+
+  lista.innerHTML = "";
+
 
   let total = 0;
   let categorias = {};
   let gastosPorFecha = {};
-
   const hoy = new Date();
 
-  const ultimosDias = [0, 1, 2].map(d => {
-    const fecha = new Date();
-    fecha.setDate(hoy.getDate() - d);
-    return fecha.toISOString().split("T")[0];
-  });
+  gastosMes.forEach((g) => {
+  const indexReal = gastos.indexOf(g);
 
-  gastos.forEach((g, index) => {
     total += g.monto;
 
     categorias[g.categoria] = (categorias[g.categoria] || 0) + g.monto;
 
     if (!gastosPorFecha[g.fecha]) gastosPorFecha[g.fecha] = [];
 
-    gastosPorFecha[g.fecha].push({ ...g, index });
+  gastosPorFecha[g.fecha].push({ ...g, index: indexReal });
   });
 
-  Object.keys(gastosPorFecha)
-    .filter(f => mostrarTodo || ultimosDias.includes(f))
-    .sort()
-    .reverse()
-    .forEach(fecha => {
+const gastosOrdenados = [...gastosMes]
+  .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-      const totalDia = gastosPorFecha[fecha]
-        .reduce((acc, g) => acc + g.monto, 0);
+const gastosAMostrar = mostrarTodo
+  ? gastosOrdenados
+  : gastosOrdenados.slice(0, 5);
 
+// agrupar los que se van a mostrar
+const gastosFiltradosPorFecha = {};
+
+gastosAMostrar.forEach((g) => {
+  if (!gastosFiltradosPorFecha[g.fecha]) {
+    gastosFiltradosPorFecha[g.fecha] = [];
+  }
+
+  const indexReal = gastos.findIndex(x =>
+    x.descripcion === g.descripcion &&
+    x.monto === g.monto &&
+    x.fecha === g.fecha
+  );
+
+  gastosFiltradosPorFecha[g.fecha].push({ ...g, index: indexReal });
+});
+
+// renderizar
+Object.keys(gastosFiltradosPorFecha)
+  .sort()
+  .reverse()
+  .forEach(fecha => {
+
+    const totalDia = gastosFiltradosPorFecha[fecha]
+      .reduce((acc, g) => acc + g.monto, 0);
+
+    lista.innerHTML += `
+      <h3 class="fecha-dia">${fecha} — $${formatearMonto(totalDia)}</h3>
+    `;
+
+    gastosFiltradosPorFecha[fecha].forEach(g => {
       lista.innerHTML += `
-        <h3>${fecha} — $${formatearMonto(totalDia)}</h3>
-      `;
-
-      gastosPorFecha[fecha].forEach(g => {
-        lista.innerHTML += `
-          <div class="gasto ${g.categoria.toLowerCase().replace(/\s+/g, "")}">
-            ${g.descripcion} - $${formatearMonto(g.monto)}
-            <button onclick="eliminarGasto(${g.index})">×</button>
+        <div class="gasto animado">
+          
+          <div class="gasto-left">
+            <div class="color-dot" style="background:${coloresCategoria[g.categoria]}"></div>
+            
+            <div>
+              <p class="desc">${g.descripcion}</p>
+              <span class="meta">${g.categoria}</span>
+            </div>
           </div>
-        `;
-      });
-    });
 
-if (gastos.length > 0) {
-  lista.innerHTML += `
-    <button class="btn-mostrar" onclick="toggleMostrar()">
-      ${mostrarTodo ? "Mostrar menos ↑" : "Mostrar más ↓"}
-    </button>
+          <div class="gasto-right">
+            <span class="monto">$${formatearMonto(g.monto)}</span>
+            <button onclick="eliminarConAnimacion(this, ${g.index})">✕</button>
+          </div>
+
+        </div>
+      `;
+    });
+});
+
+  if (gastosMes.length > 0) {
+    lista.innerHTML += `
+      <button class="btn-mostrar" onclick="toggleMostrar()">
+        ${mostrarTodo ? "Mostrar menos ↑" : "Mostrar más ↓"}
+      </button>
+    `;
+  }
+
+ animarNumero(totalEl, total, 1000);
+
+totalEl.classList.add("animando");
+setTimeout(() => totalEl.classList.remove("animando"), 200);
+
+  const totalGrafico = document.getElementById("graficoTotal");
+  if (totalGrafico) {
+  totalGrafico.style.display = gastosMes.length === 0 ? "none" : "block";
+}
+
+if (totalGrafico) {
+animarNumero(totalGrafico, total);
+}
+  const totalActual = obtenerTotalMes(mesSeleccionado);
+  const mesTexto = document.getElementById("mesActualTexto");
+  const tituloMes = document.getElementById("tituloMes");
+
+if (tituloMes) {
+let nombreMes = mesSeleccionado.toLocaleDateString("es-AR", {
+  month: "long"
+});
+
+nombreMes = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+
+  tituloMes.textContent = "Gastos de " + nombreMes;
+  tituloMes.classList.remove("titulo-animado");
+  void tituloMes.offsetWidth; // reinicia animación
+  tituloMes.classList.add("titulo-animado");
+}
+if (mesTexto) {
+  mesTexto.textContent = mesSeleccionado.toLocaleDateString("es-AR", {
+    month: "long",
+    year: "numeric"
+  });
+}
+
+const mesAnterior = new Date(mesSeleccionado);
+mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+
+const totalAnterior = obtenerTotalMes(mesAnterior);
+
+let porcentaje = 0;
+
+if (totalAnterior > 0) {
+  porcentaje = ((totalActual - totalAnterior) / totalAnterior) * 100;
+}
+const compBox = document.getElementById("comparacion-box");
+
+if (compBox) {
+  compBox.innerHTML = `
+    <div class="total-card">
+      <p>Comparación mensual</p>
+      <h2>
+        ${porcentaje >= 0 ? "📈" : "📉"} ${porcentaje.toFixed(1)}%
+      </h2>
+      <span>Mes anterior: $${formatearMonto(totalAnterior)}</span>
+    </div>
   `;
 }
 
-  totalEl.textContent = formatearMonto(total);
+  const ctx = document.getElementById("grafico");
+  if (!ctx) return;
 
-const ctx = document.getElementById("grafico");
+  const datosOrdenados = Object.keys(categorias).map(cat => ({
+  label: cat,
+  value: categorias[cat]
+})).sort((a, b) => b.value - a.value);
 
-const labels = Object.keys(categorias);
-const data = Object.values(categorias);
+const labels = datosOrdenados.map(d => d.label);
+const data = datosOrdenados.map(d => d.value);
 
-if (!ctx) return;
-
-// 👇 SI NO HAY DATOS
-if (labels.length === 0) {
-  if (grafico) {
-    grafico.destroy();
-    grafico = null;
-  }
-} else {
-  // 👇 SI HAY DATOS
-  if (grafico) {
-    grafico.destroy();
-  }
-
-  grafico = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: labels.map(c => coloresCategoria[c] || "#ccc")
-      }]
+  if (labels.length === 0) {
+    if (grafico) {
+      grafico.destroy();
+      grafico = null;
     }
-  });
+  } else {
+if (grafico) {
+  grafico.data.labels = labels;
+  grafico.data.datasets[0].data = data;
+   grafico.data.datasets[0].backgroundColor =
+    labels.map(c => coloresCategoria[c] || "#ccc");
+  grafico.update();
+} else {
+  grafico = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: labels,
+datasets: [{
+  data: data,
+  backgroundColor: labels.map(c => coloresCategoria[c]),
+  borderWidth: 0,
+hoverOffset: 30,
+hoverBorderWidth: 2,
+hoverBorderColor: "#fff"
+}]
+      },
+   options: {
+  interaction: {
+    mode: 'nearest',
+    intersect: true
+  },
+
+  cutout: "65%",
+  radius:"85%",
+
+  layout: {
+    padding: 10
+  },
+  
+
+plugins: {  
+  legend: {
+    display: false
+  },
+tooltip: {
+  backgroundColor: "#111",
+  titleColor: "#fff",
+  bodyColor: "#fff",
+  padding: 10,
+  cornerRadius: 8,
+  callbacks: {
+    label: function(context) {
+      const value = context.raw || 0;
+
+      const dataArr = context.chart.data.datasets[0].data;
+      const total = dataArr.reduce((a, b) => a + b, 0);
+
+      const porcentaje = total > 0
+        ? ((value / total) * 100).toFixed(1)
+        : 0;
+
+      return context.label + ": $" + formatearMonto(value) + " (" + porcentaje + "%)";
+    }
+  }
 }
-  generarCalendario();
+}
+  },
+
+animation: {
+  duration: 800,
+  easing: "easeOutCubic"
+}
+});  
 }
 
+    function centrarTexto() {
+  const canvasRect = ctx.getBoundingClientRect();
+  const contenedor = document.querySelector(".grafico-container");
+  const texto = document.getElementById("graficoTotal");
+
+  if (!texto || !contenedor) return;
+
+  const contRect = contenedor.getBoundingClientRect();
+
+  const top = canvasRect.top - contRect.top + canvasRect.height / 2;
+  const left = canvasRect.left - contRect.left + canvasRect.width / 2;
+
+  texto.style.top = top + "px";
+  texto.style.left = left + "px";
+  texto.style.transform = "translate(-50%, -50%)";
+}
+
+// 👇 ejecutar cuando se crea
+centrarTexto();
+
+// 👇 ejecutar al redimensionar
+window.addEventListener("resize", centrarTexto);
+let ultimoIndex = null;
+
+ctx.addEventListener("mousemove", (e) => {
+  if (!grafico) return;
+
+  const points = grafico.getElementsAtEventForMode(
+    e,
+    'nearest',
+    { intersect: true },
+    true
+  );
+
+  const totalGrafico = document.getElementById("graficoTotal");
+  if (!totalGrafico) return;
+
+  if (points.length > 0) {
+    const index = points[0].index;
+
+    if (index !== ultimoIndex) {
+      const value = grafico.data.datasets[0].data[index];
+      animarNumero(totalGrafico, value, 400);
+      ultimoIndex = index;
+    }
+
+  } else {
+    if (ultimoIndex !== null) {
+      const total = grafico.data.datasets[0].data
+        .reduce((a, b) => a + b, 0);
+
+      animarNumero(totalGrafico, total, 600);
+      ultimoIndex = null;
+    }
+  }
+});
+  }
+const leyenda = document.getElementById("leyenda");
+
+if (leyenda) {
+  const totalLeyenda = data.reduce((a, b) => a + b, 0);
+
+  leyenda.innerHTML = labels.map((cat, i) => {
+    const max = Math.max(...data);
+    const valor = data[i];
+    const porcentaje = totalLeyenda > 0
+      ? ((valor / totalLeyenda) * 100)
+      : 0;
+
+return `
+  <div style="
+    margin-bottom:10px;
+    font-size:13px;
+    ${valor === max ? "transform: scale(1.03); font-weight:600;" : ""}
+  ">
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:4px;
+    ">
+      <span>
+        ${valor === max ? "🔥 " : ""}${cat}
+      </span>
+
+      <span>
+        $${formatearMonto(valor)} (${porcentaje.toFixed(1)}%)
+      </span>
+    </div>
+
+    <div style="
+      width:100%;
+      height:6px;
+      background:#e5e7eb;
+      border-radius:4px;
+      overflow:hidden;
+    ">
+      <div style="
+        width:${porcentaje}%;
+        height:100%;
+        background:${coloresCategoria[cat]};
+      "></div>
+    </div>
+
+  </div>
+`;
+  }).join("");
+}
+  generarCalendario(); // 👈 ESTO ES CLAVE
+}
 function generarCalendario() {
   const cont = document.getElementById("calendario");
-  const mesEl = document.getElementById("mesActual");
+  const mesEl = document.getElementById("mesSeleccionado");
 
   if (!cont || !mesEl) return;
 
   cont.innerHTML = "";
 
-  const año = mesActual.getFullYear();
-  const mes = mesActual.getMonth();
+  const año = mesSeleccionado.getFullYear();
+  const mes = mesSeleccionado.getMonth();
 
   const fechaActual = new Date(año, mes);
 
@@ -188,25 +500,47 @@ function generarCalendario() {
     year: "numeric"
   });
 
-  const primerDia = new Date(año, mes, 1).getDay();
+ let primerDia = (new Date(año, mes, 1).getDay() + 6) % 7;
   const diasMes = new Date(año, mes + 1, 0).getDate();
 
-  const offset = primerDia === 0 ? 6 : primerDia - 1;
 
-  for (let i = 0; i < offset; i++) {
-    cont.innerHTML += `<div class="dia vacio"></div>`;
-  }
+  for (let i = 0; i < primerDia; i++) {
+  const div = document.createElement("div");
+  div.className = "dia vacio";
+  cont.appendChild(div);
+}
 
 for (let i = 1; i <= diasMes; i++) {
   const fecha = `${año}-${String(mes + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
 
-  const gastosDia = gastos.filter(g => {
-    const f = new Date(g.fecha).toISOString().split("T")[0];
-    return f === fecha;
-  });
+const gastosDia = gastos.filter(g => {
+  const [year, month, day] = g.fecha.split("-");
+  const f = new Date(year, month - 1, day);
+
+  return (
+    f.getDate() === i &&
+    f.getMonth() === mes &&
+    f.getFullYear() === año
+  );
+});
 
   const div = document.createElement("div");
-  div.className = "dia";
+div.className = "dia";
+
+// 👇 detectar si es hoy
+const hoy = new Date();
+
+if (
+  i === hoy.getDate() &&
+  mes === hoy.getMonth() &&
+  año === hoy.getFullYear()
+) {
+  div.classList.add("hoy");
+  div.classList.add("activo");
+  diaSeleccionado = div;
+
+  verDetalle(fecha);
+}
 
   div.innerHTML = `
     <div class="dia-header">
@@ -245,7 +579,7 @@ for (let i = 1; i <= diasMes; i++) {
   div.classList.add("activo");
   diaSeleccionado = div;
 
-  verDetalle(fecha, rect);
+ verDetalle(fecha);
 });
 
   cont.appendChild(div); // 👈 ESTO FALTABA
@@ -253,78 +587,189 @@ for (let i = 1; i <= diasMes; i++) {
   }
 
 function toggleMostrar() {
-  mostrarTodo = !mostrarTodo;
-  mostrarGastos();
+  const lista = document.getElementById("lista");
+
+  // animación salida
+  lista.classList.add("lista-oculta");
+
+  setTimeout(() => {
+    mostrarTodo = !mostrarTodo;
+
+    mostrarGastos();
+
+    // animación entrada
+    lista.classList.remove("lista-oculta");
+  }, 200);
 }
 
 function cambiarMes(valor) {
-  mesActual.setMonth(mesActual.getMonth() + valor);
-  generarCalendario();
+  mesSeleccionado.setMonth(mesSeleccionado.getMonth() + valor);
+ mostrarGastos();
 }
-function verDetalle(fecha,rect) {
-  const overlay = document.getElementById("overlay");
-  const modal = document.getElementById("modal");
+function verDetalle(fecha) {
+  const detalle = document.querySelector("#modalCalendario #detalle-dia");
+
+  const [year, month, day] = fecha.split("-");
+  const fechaObj = new Date(year, month - 1, day);
 
   const gastosDia = gastos.filter(g => {
-    const f = new Date(g.fecha).toISOString().split("T")[0];
-    return f === fecha;
+    const [y, m, d] = g.fecha.split("-");
+    const f = new Date(y, m - 1, d);
+
+    return (
+      f.getFullYear() === fechaObj.getFullYear() &&
+      f.getMonth() === fechaObj.getMonth() &&
+      f.getDate() === fechaObj.getDate()
+    );
   });
 
   const totalDia = gastosDia.reduce((acc, g) => acc + g.monto, 0);
+    if (gastosDia.length === 0) {
+    detalle.classList.remove("activo");
+    detalle.classList.add("vacio");
 
-// posición inicial (desde el día)
-if (rect) {
-  modal.style.transformOrigin = `${rect.left + rect.width / 2}px ${rect.top + rect.height / 2}px`;
-} else {
-  modal.style.transformOrigin = "center";
-}
-  modal.innerHTML = `
-    <div class="modal-header">
-      <h3>${new Date(fecha).toLocaleDateString("es-AR", {
-        day: "numeric",
-        month: "long"
-      })}</h3>
-
-      <span class="total-dia">$${formatearMonto(totalDia)}</span>
-
-      <button class="cerrar" onclick="cerrarModal()">×</button>
-    </div>
-
-    <div class="modal-body">
-      ${
-        gastosDia.length === 0
-          ? "<p class='vacio'>No hay gastos</p>"
-          : gastosDia.map(g => `
-            <div class="detalle-item">
-              <span class="desc">${g.descripcion}</span>
-              <strong>$${formatearMonto(g.monto)}</strong>
-            </div>
-          `).join("")
-      }
-    </div>
-  `;
-
-  overlay.classList.add("active");
-}
-function cerrarModal() {
-  document.getElementById("overlay").classList.remove("active");
-}
-const btnModo = document.getElementById("toggleModo");
-
-// cargar preferencia guardada
-if (localStorage.getItem("modo") === "dark") {
-  document.body.classList.add("dark");
-  btnModo.textContent = "☀️";
-}
-
-btnModo.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-
-  if (document.body.classList.contains("dark")) {
-    localStorage.setItem("modo", "dark");
-    btnModo.textContent = "☀️";
-  } else {
-    localStorage.setItem("modo", "light");
-    btnModo.textContent = "🌙";
+    detalle.innerHTML = `
+      <div style="text-align: center; opacity: 0.6;padding:10px;">
+        <div style="font-size:20px;">🧾</div>
+        <div>No tenés gastos este día</div>
+      </div>
+    `;
+    return;
   }
+  detalle.classList.remove("vacio");
+  detalle.classList.add("activo");
+
+ detalle.innerHTML = `
+  <div style="margin-bottom:10px;">
+    <strong>${fechaObj.toLocaleDateString("es-AR", {
+      day: "numeric",
+      month: "long"
+    })}</strong>
+  </div>
+
+  <div style="margin-bottom:10px; font-weight:600;">
+    Total: $${formatearMonto(totalDia)}
+  </div>
+
+  ${gastosDia.map(g => `
+    <div class="detalle-item">
+      <span class="desc">${g.descripcion}</span>
+      <strong>$${formatearMonto(g.monto)}</strong>
+    </div>
+  `).join("")}
+`;
+}
+function animarNumero(elemento, valorFinal, duracion = 800) {
+  const start = 0;
+  const startTime = performance.now();
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function actualizar(tiempoActual) {
+    const progreso = Math.min((tiempoActual - startTime) / duracion, 1);
+    const eased = easeOutCubic(progreso);
+
+    const valorActual = Math.floor(start + (valorFinal - start) * eased);
+
+    elemento.textContent = "$" + formatearMonto(valorActual);
+
+    if (progreso < 1) {
+      requestAnimationFrame(actualizar);
+    }
+  }
+
+  requestAnimationFrame(actualizar);
+}
+function eliminarConAnimacion(btn, index) {
+  const card = btn.closest(".gasto");
+
+  card.style.transition = "0.3s";
+  card.style.opacity = "0";
+  card.style.transform = "translateX(20px)";
+
+  setTimeout(() => {
+    eliminarGasto(index);
+  }, 300);
+}
+function abrirCalendario() {
+  document.getElementById("modalCalendario").classList.add("activo");
+}
+
+function cerrarCalendario() {
+  const modal = document.getElementById("modalCalendario");
+  const contenido = modal.querySelector(".modal-contenido");
+
+  // animación de salida
+  contenido.style.transform = "scale(0.9)";
+  contenido.style.opacity = "0";
+
+  setTimeout(() => {
+    modal.classList.remove("activo");
+
+    // reset para próxima apertura
+    contenido.style.transform = "";
+    contenido.style.opacity = "";
+  }, 250); // mismo tiempo que el CSS
+}
+document.addEventListener("keydown", (e) => {
+  const modal = document.getElementById("modalCalendario");
+
+  if (e.key === "Escape" && modal.classList.contains("activo")) {
+    cerrarCalendario();
+  }
+});
+
+// cerrar haciendo click afuera
+const modalCal = document.getElementById("modalCalendario");
+
+if (modalCal) {
+  modalCal.addEventListener("click", (e) => {
+    if (e.target.id === "modalCalendario") {
+      cerrarCalendario();
+    }
+  });
+}
+function mostrarToast(mensaje, tipo = "success") {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  toast.textContent = mensaje;
+
+  // reset clases
+  toast.classList.remove("success", "error");
+
+  // aplicar tipo
+  toast.classList.add(tipo);
+
+  // mostrar
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2500);
+}
+function capitalizar(texto) {
+  if (!texto) return "";
+  return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+}
+const inputMonto = document.getElementById("monto");
+
+inputMonto.addEventListener("input", (e) => {
+  let valor = e.target.value;
+
+  // eliminar todo lo que no sea número
+  valor = valor.replace(/\D/g, "");
+
+  // convertir a número
+  let numero = Number(valor);
+
+  if (!numero) {
+    e.target.value = "";
+    return;
+  }
+
+  // formatear con puntos
+  e.target.value = "$" + numero.toLocaleString("es-AR");
 });

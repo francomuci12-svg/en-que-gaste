@@ -6,7 +6,6 @@
 
   <!-- Fuente -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <button id="toggleModo">🌙</button>
   <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,75 +16,137 @@
 
     <!-- HEADER PRO -->
     <div class="header">
-      <h1 class="titulo">¿En qué gasté?</h1>
-      <p class="subtitle">Control simple de gastos diarios</p>
+      <h1 class="titulo">
+  <span class="icono">📊</span>
+  ¿En qué gasté?
+</h1>
+      <p class="subtitle">Visualizá en qué se va tu plata</p>
     </div>
 
-    <!-- FORM -->
+<div class="top-section">
+
+  <!-- FORM -->
+ <div class="form-card">
+  <h3 class="form-title">Nuevo Gasto</h3>
+
+  <div class="form-body">
     <div class="form">
-      <input id="descripcion" placeholder="Ej: supermercado">
-      <input id="monto" type="number" placeholder="Monto en $">
-      <input id="fecha" type="date">
+     <div class="form-group">
+  <label>Descripción</label>
+  <input id="descripcion" placeholder="Ej: supermercado">
+</div>
 
-      <select id="categoria">
-        <option>Comida</option>
-        <option>Transporte</option>
-        <option>Supermercado</option>
-        <option>Entretenimiento</option>
-        <option>Alquiler</option>
-        <option>Servicios</option>
-        <option>Tarjeta</option>
-        <option>Deudas</option>
-        <option>Ahorro</option>
-        <option>Ropa</option>
-        <option>Gimnasio</option>
-        <option>Salud</option>
-        <option>Salidas</option>
-        <option>Mascotas</option>
-      </select>
+<div class="form-row">
 
-      <button onclick="agregarGasto()">Agregar gasto</button>
+  <div class="form-group">
+    <label>Monto</label>
+    <input id="monto" type="text" placeholder="$0">
+  </div>
+
+  <div class="form-group">
+    <label>Fecha</label>
+    <input id="fecha" type="date">
+  </div>
+
+</div>
+
+<div class="form-group">
+  <label>Categoría</label>
+  <select id="categoria">
+    <option>Comida</option>
+    <option>Transporte</option>
+    <option>Supermercado</option>
+    <option>Entretenimiento</option>
+    <option>Alquiler</option>
+    <option>Servicios</option>
+    <option>Tarjeta</option>
+    <option>Ropa</option>
+    <option>Gimnasio</option>
+    <option>Salud</option>
+    <option>Salidas</option>
+  </select>
+</div>
+
+      <button onclick="agregarGasto()">Agregar</button>
     </div>
+  </div>
+  </div>
 
-    <!-- TARJETA TOTAL -->
-    <div class="total-card">
-      <p>Total del mes</p>
-      <h2>$<span id="total">0</span></h2>
-    </div>
+  <!-- RESUMEN -->
+  <div class="resumen">
+  <div class="total-card" onclick="abrirCalendario()">
+    <p id="tituloMes"></p>
+    <h2><span id="total">0</span></h2>
+  </div>
+
+    <div id="comparacion-box"></div>
+  </div>
+
+</div>
 
     <!-- GRÁFICO -->
-  <div class="dashboard">
-  <div class="panel grafico-panel">
-    <canvas id="grafico"></canvas>
-  </div>
+     <div class="selector-mes">
+ <button onclick="cambiarMes(-1)">❮</button>
+<span id="mesActualTexto"></span>
+<button onclick="cambiarMes(1)">❯</button>
+</div>
+<div id="estadoVacio" class="vacio">
+  Aún no tenés gastos
+</div>
+ <div class="dashboard">
+
+<div class="grafico-container">
+  <canvas id="grafico"></canvas>
+  <div id="graficoTotal"></div> 
+  <div id="leyenda"></div>
+</div>
 
   <div id="lista-container">
     <div id="lista"></div>
+
   </div>
 </div>
 
-<!-- 👇 CALENDARIO AFUERA -->
-<div class="panel calendario-panel">
-  <div class="cal-header">
-  <button onclick="cambiarMes(-1)">←</button>
-  <h3 id="mesActual"></h3>
-  <button onclick="cambiarMes(1)">→</button>
-</div>
+<div id="modalCalendario" class="modal-cal">
+
+ <div class="modal-contenido">
+
+  <div class="modal-header">
+    <h3 class="modal-title">Calendario</h3>
+    <button class="cerrar-cal" onclick="cerrarCalendario()">✕</button>
   </div>
 
-  <div class="dias-semana">
-    <span>Lun</span>
-    <span>Mar</span>
-    <span>Mié</span>
-    <span>Jue</span>
-    <span>Vie</span>
-    <span>Sáb</span>
-    <span>Dom</span>
+    <!-- 👇 TU CALENDARIO -->
+    <div class="panel calendario-panel">
+
+      <div id="calendario-container">
+
+        <div class="cal-header">
+          <button onclick="cambiarMes(-1)">‹</button>
+          <h3 id="mesSeleccionado"></h3>
+          <button onclick="cambiarMes(1)">›</button>
+        </div>
+
+        <div class="dias-semana">
+          <span>Lun</span>
+          <span>Mar</span>
+          <span>Mié</span>
+          <span>Jue</span>
+          <span>Vie</span>
+          <span>Sáb</span>
+          <span>Dom</span>
+        </div>
+
+        <div id="calendario"></div>
+
+      </div>
+    </div>
+
+<div id="detalle-dia" class="detalle-dia"></div>
+
   </div>
 
-  <div id="calendario"></div>
 </div>
-    <div id="detalle-dia" class="detalle-dia"></div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -94,5 +155,6 @@
 <div id="overlay" class="overlay">
   <div id="modal" class="modal"></div>
 </div>
+<div id="toast"></div>
 </body>
 </html>

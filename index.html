@@ -4,157 +4,255 @@
   <meta charset="UTF-8">
   <title>¿En qué gasté?</title>
 
-  <!-- Fuente -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <!-- CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <!-- HEADER PRO -->
-    <div class="header">
-      <h1 class="titulo">
-  <span class="icono">📊</span>
-  ¿En qué gasté?
-</h1>
-      <p class="subtitle">Visualizá en qué se va tu plata</p>
-    </div>
-
-<div class="top-section">
-
-  <!-- FORM -->
- <div class="form-card">
-  <h3 class="form-title">Nuevo Gasto</h3>
-
-  <div class="form-body">
-    <div class="form">
-     <div class="form-group">
-  <label>Descripción</label>
-  <input id="descripcion" placeholder="Ej: supermercado">
-</div>
-
-<div class="form-row">
-
-  <div class="form-group">
-    <label>Monto</label>
-    <input id="monto" type="text" placeholder="$0">
+  <!-- HEADER -->
+  <div class="header">
+    <h1 class="titulo">
+      <span class="icono">📊</span>
+      ¿En qué gasté?
+    </h1>
+    <p class="subtitle">Visualizá en qué se va tu plata</p>
   </div>
 
-  <div class="form-group">
-    <label>Fecha</label>
-    <input id="fecha" type="date">
-  </div>
+  <!-- TOP SECTION -->
+  <div class="top-section">
 
-</div>
+    <!-- FORM -->
+    <div class="form-card">
+      <h3 class="form-title">Nuevo Gasto</h3>
 
-<div class="form-group">
-  <label>Categoría</label>
-  <select id="categoria">
-    <option>Comida</option>
-    <option>Transporte</option>
-    <option>Supermercado</option>
-    <option>Entretenimiento</option>
-    <option>Alquiler</option>
-    <option>Servicios</option>
-    <option>Tarjeta</option>
-    <option>Ropa</option>
-    <option>Gimnasio</option>
-    <option>Salud</option>
-    <option>Salidas</option>
-  </select>
-</div>
+      <div class="form-body">
+        <div class="form">
 
-      <button onclick="agregarGasto()">Agregar</button>
-    </div>
-  </div>
-  </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input id="descripcion" placeholder="Ej: supermercado">
+          </div>
 
-  <!-- RESUMEN -->
-  <div class="resumen">
-  <div class="total-card" onclick="abrirCalendario()">
-    <p id="tituloMes"></p>
-    <h2><span id="total">0</span></h2>
-  </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Monto</label>
+              <input id="monto" type="text" placeholder="$0">
+            </div>
 
-    <div id="comparacion-box"></div>
-  </div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <input id="fecha" type="date">
+            </div>
+          </div>
 
-</div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="categoria">
+              <option>Comida</option>
+              <option>Transporte</option>
+              <option>Supermercado</option>
+              <option>Entretenimiento</option>
+              <option>Alquiler</option>
+              <option>Servicios</option>
+              <option>Tarjeta</option>
+              <option>Ropa</option>
+              <option>Gimnasio</option>
+              <option>Salud</option>
+              <option>Salidas</option>
+            </select>
+          </div>
 
-    <!-- GRÁFICO -->
-     <div class="selector-mes">
- <button onclick="cambiarMes(-1)">❮</button>
-<span id="mesActualTexto"></span>
-<button onclick="cambiarMes(1)">❯</button>
-</div>
-<div id="estadoVacio" class="vacio">
-  Aún no tenés gastos
-</div>
- <div class="dashboard">
+          <button onclick="agregarGasto()">Agregar</button>
 
-<div class="grafico-container">
-  <canvas id="grafico"></canvas>
-  <div id="graficoTotal"></div> 
-  <div id="leyenda"></div>
-</div>
-
-  <div id="lista-container">
-    <div id="lista"></div>
-
-  </div>
-</div>
-
-<div id="modalCalendario" class="modal-cal">
-
- <div class="modal-contenido">
-
-  <div class="modal-header">
-    <h3 class="modal-title">Calendario</h3>
-    <button class="cerrar-cal" onclick="cerrarCalendario()">✕</button>
-  </div>
-
-    <!-- 👇 TU CALENDARIO -->
-    <div class="panel calendario-panel">
-
-      <div id="calendario-container">
-
-        <div class="cal-header">
-          <button onclick="cambiarMes(-1)">‹</button>
-          <h3 id="mesSeleccionado"></h3>
-          <button onclick="cambiarMes(1)">›</button>
         </div>
-
-        <div class="dias-semana">
-          <span>Lun</span>
-          <span>Mar</span>
-          <span>Mié</span>
-          <span>Jue</span>
-          <span>Vie</span>
-          <span>Sáb</span>
-          <span>Dom</span>
-        </div>
-
-        <div id="calendario"></div>
-
       </div>
     </div>
 
-<div id="detalle-dia" class="detalle-dia"></div>
+    <!-- RESUMEN -->
+    <div class="resumen">
 
+      <div class="total-card">
+        <p>Gasto de hoy</p>
+        <h2 id="totalHoy">$0</h2>
+      </div>
+
+      <div class="total-card" onclick="abrirCalendario()">
+        <p id="tituloMes"></p>
+        <h2><span id="total">0</span></h2>
+      </div>
+
+      <div id="comparacion-box" class="total-card"></div>
+
+    </div>
+
+  </div>
+
+  <!-- SELECTOR MES -->
+  <div class="selector-mes">
+    <button onclick="cambiarMes(-1)">❮</button>
+    <span id="mesActualTexto"></span>
+    <button onclick="cambiarMes(1)">❯</button>
+  </div>
+
+  <!-- VACÍO -->
+  <div id="estadoVacio" class="vacio">
+    Aún no tenés gastos
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+
+
+    <!-- GRÁFICO -->
+    <div class="grafico-container">
+      <canvas id="grafico"></canvas>
+      <div id="graficoTotal"></div>
+    </div>
+
+    <!-- CATEGORÍAS -->
+    <div class="categorias-box">
+      <h3>Categorías</h3>
+      <div id="categorias"></div>
+    </div>
+
+  </div>
+
+  <!-- CALENDARIO -->
+  <div id="modalCalendario" class="modal-cal">
+    <div class="modal-contenido">
+
+      <div class="modal-header">
+        <h3 class="modal-title">Calendario</h3>
+        <button class="cerrar-cal" onclick="cerrarCalendario()">✕</button>
+      </div>
+
+      <div class="panel calendario-panel">
+        <div id="calendario-container">
+
+          <div class="cal-header">
+            <button onclick="cambiarMes(-1)">‹</button>
+            <h3 id="mesSeleccionado"></h3>
+            <button onclick="cambiarMes(1)">›</button>
+          </div>
+
+          <div class="dias-semana">
+            <span>Lun</span>
+            <span>Mar</span>
+            <span>Mié</span>
+            <span>Jue</span>
+            <span>Vie</span>
+            <span>Sáb</span>
+            <span>Dom</span>
+          </div>
+
+          <div id="calendario"></div>
+        </div>
+      </div>
+
+      <div id="detalle-dia" class="detalle-dia"></div>
+
+    </div>
+  </div>
+
+<!-- AHORRO -->
+<div class="ahorro-card">
+
+  <div class="ahorro-top">
+    <div class="ahorro-info">
+
+      <!-- 💰 TOTAL -->
+      <p>Total ahorrado</p>
+      <h2 id="totalAhorroUI">$0</h2>
+
+      <!-- 🎯 OBJETIVO ACTIVO -->
+      <div id="objetivoUI"></div>
+
+      <!-- 🧩 LISTA -->
+      <div id="listaObjetivos" class="lista-objetivos"></div>
+
+      <!-- 🔘 BOTONES -->
+      <div class="acciones-ahorro">
+        <button onclick="abrirModalMovimiento('sumar')">+ Agregar</button>
+        <button onclick="abrirModalMovimiento('restar')">− Retirar</button>
+      </div>
+
+      <!-- ➕ OBJETIVO -->
+      <button class="btn-agregar-objetivo" onclick="abrirModalObjetivo()">
+        + Agregar objetivo
+      </button>
+<button onclick="abrirLogros()" class="btn-agregar-objetivo">
+  🏆 Ver logros
+</button>
+    </div>
   </div>
 
 </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="main.js"></script>
 
 <div id="overlay" class="overlay">
   <div id="modal" class="modal"></div>
 </div>
+
+<div id="detalleCategoria" class="detalle-dia"></div>
 <div id="toast"></div>
+<div id="modalCategoria" class="modal-categoria"></div>
+<div id="modalObjetivo" class="modal-objetivo">
+  <div class="modal-objetivo-content">
+
+    <h3>Nuevo objetivo</h3>
+
+    <input id="nuevoNombre" placeholder="Ej: Viaje">
+    <input id="nuevoMonto" placeholder="$">
+
+    <div class="acciones-modal">
+     <button type="button" onclick="crearObjetivoDesdeModal()">Guardar</button>
+      <button onclick="cerrarModalObjetivo()">Cancelar</button>
+    </div>
+
+  </div>
+</div>
+<div id="modalMovimiento" class="modal-objetivo">
+  <div class="modal-objetivo-content">
+
+    <h3 id="tituloMovimiento">Movimiento</h3>
+
+    <input id="inputMovimiento" placeholder="$">
+
+    <div class="acciones-modal">
+      <button onclick="cerrarModalMovimiento()">Cancelar</button>
+      <button onclick="confirmarMovimiento()" class="btn-confirmar">
+        Confirmar
+      </button>
+    </div>
+
+  </div>
+</div>
+<div id="modalConfirmar" class="modal-objetivo">
+  <div class="modal-objetivo-content">
+    <h3>Confirmar retiro</h3>
+    <p id="textoConfirmar"></p>
+
+    <div class="acciones-modal">
+      <button onclick="cancelarConfirmacion()">Cancelar</button>
+      <button onclick="confirmarAccion()" class="btn-confirmar">Confirmar</button>
+    </div>
+  </div>
+</div><div id="modalLogros" class="modal">
+  <div class="modal-contenido">
+    
+    <div class="modal-header">
+      <h3>🏆 Logros</h3>
+      <button onclick="cerrarLogros()">✕</button>
+    </div>
+
+    <div id="listaLogros"></div>
+
+  </div>
+</div>
 </body>
 </html>
